@@ -1,0 +1,45 @@
+{
+    "name": "Glen's House",
+    "weather": {
+        "officeId": "MPX",
+        "gridpoints": "108,72"
+    },
+    "stopGroups": {
+        "Downtown": [
+            {
+                "id": "1920",
+                "walkingTime": 5,
+                "routes": [
+                    "11",
+                    "17",
+                    "18"
+                ]
+            },
+            {
+                "id": "17988",
+                "walkingTime": 7,
+                "routes": [
+                    "10"
+                ]
+            }
+        ],
+        "Uptown": [
+            {
+                "id": "1197",
+                "walkingTime": 5,
+                "routes": [
+                    "11",
+                    "17",
+                    "18"
+                ]
+            },
+            {
+                "id": "53301",
+                "walkingTime": 10,
+                "routes": [
+                    "904"
+                ]
+            }
+        ]
+    }
+}
