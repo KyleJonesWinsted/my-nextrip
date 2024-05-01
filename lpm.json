@@ -21,6 +21,14 @@
                 "routes": [
                     "10"
                 ]
+            },
+            {
+                "id": "17940",
+                "walkingTime": 10,
+                "routes": [
+                    "6",
+                    "4"
+                ]
             }
         ],
         "Uptown": [
@@ -38,6 +46,14 @@
                 "walkingTime": 10,
                 "routes": [
                     "904"
+                ]
+            },
+            {
+                "id": "17931",
+                "walkingTime": 10,
+                "routes": [
+                    "6",
+                    "4"
                 ]
             }
         ]

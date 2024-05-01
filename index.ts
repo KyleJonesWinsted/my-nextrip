@@ -54,7 +54,7 @@ function createTableFromObjectArray(arr: Array<Record<string, unknown>>) {
     if (arr.length < 1) return createElementFromHTML(`<table></table>`);
     const headerCells = Object.keys(arr[0]).map((k) => `<th>${k}</th>`);
     const rows = arr.map((e) => {
-        const cells = Object.values(e).map((v) => `<td>${v}</td>`);
+        const cells = Object.keys(e).map((k) => `<td>${e[k]}</td>`);
         return `<tr>${cells}</tr>`;
     })
     return createElementFromHTML(/*html*/`
@@ -79,7 +79,7 @@ async function fetchDepartures(stop: Stop): Promise<Departure[]> {
     if (!response.ok) throw new Error(`bad response from api ${response.status} ${response.statusText}}`);
     const data: NexTripAPIResponse = await response.json();
     return data.departures
-        .filter((d) => stop.routes.includes(d.route_id))
+        .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
         .map(d => {
             const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
             return {

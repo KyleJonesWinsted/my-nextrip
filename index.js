@@ -1,45 +1,60 @@
 "use strict";
-async function main() {
-    const fragment = location.hash.replace('#', '');
-    console.log(fragment);
-    const config = await loadConfig(fragment || 'lpm');
-    const nameH1 = document.getElementById('name');
-    nameH1.innerHTML = config.name;
-    updateDisplay(config);
-    const updateInterval = 15 * 1000; // 15 seconds
-    setInterval(() => updateDisplay(config), updateInterval);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+function main() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const fragment = location.hash.replace('#', '');
+        console.log(fragment);
+        const config = yield loadConfig(fragment || 'lpm');
+        const nameH1 = document.getElementById('name');
+        nameH1.innerHTML = config.name;
+        updateDisplay(config);
+        const updateInterval = 15 * 1000; // 15 seconds
+        setInterval(() => updateDisplay(config), updateInterval);
+    });
 }
-async function updateDisplay(config) {
-    const groupsDiv = document.getElementById('stop-groups');
-    groupsDiv.innerHTML = '';
-    for (const stopGroup of Object.keys(config.stopGroups)) {
-        const stops = config.stopGroups[stopGroup];
-        const departures = await fetchDeparturesByGroup(stops);
-        const table = createTableFromObjectArray(departures.slice(0, 6));
-        console.log(table);
-        groupsDiv.appendChild(createElementFromHTML(`<h1>${stopGroup}</h1>`)[0]);
-        groupsDiv.appendChild(table[1]);
-    }
-    const weatherDiv = document.getElementById('weather');
-    const weather = await fetchWeather(config.weather);
-    weatherDiv.innerHTML = `
+function updateDisplay(config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const groupsDiv = document.getElementById('stop-groups');
+        groupsDiv.innerHTML = '';
+        for (const stopGroup of Object.keys(config.stopGroups)) {
+            const stops = config.stopGroups[stopGroup];
+            const departures = yield fetchDeparturesByGroup(stops);
+            const table = createTableFromObjectArray(departures.slice(0, 6));
+            console.log(table);
+            groupsDiv.appendChild(createElementFromHTML(`<h1>${stopGroup}</h1>`)[0]);
+            groupsDiv.appendChild(table[1]);
+        }
+        const weatherDiv = document.getElementById('weather');
+        const weather = yield fetchWeather(config.weather);
+        weatherDiv.innerHTML = `
         <h2>${weather.description}</h2>
         <h2>${weather.temperature}℉ </h2>
         <h2>Wind: ${weather.windSpeed} ${weather.windDirection}<h2>
     `;
+    });
 }
-async function fetchWeather(config) {
-    const response = await fetch(`https://api.weather.gov/gridpoints/${config.officeId}/${config.gridpoints}/forecast/hourly`);
-    if (!response.ok)
-        throw new Error(`bad repsonse from weather api ${response.status} ${response.statusText}`);
-    const data = await response.json();
-    const current = data.properties.periods[0];
-    return {
-        temperature: current.temperature,
-        windDirection: current.windDirection,
-        windSpeed: current.windSpeed,
-        description: current.shortForecast,
-    };
+function fetchWeather(config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield fetch(`https://api.weather.gov/gridpoints/${config.officeId}/${config.gridpoints}/forecast/hourly`);
+        if (!response.ok)
+            throw new Error(`bad repsonse from weather api ${response.status} ${response.statusText}`);
+        const data = yield response.json();
+        const current = data.properties.periods[0];
+        return {
+            temperature: current.temperature,
+            windDirection: current.windDirection,
+            windSpeed: current.windSpeed,
+            description: current.shortForecast,
+        };
+    });
 }
 function createElementFromHTML(htmlString) {
     const div = document.createElement('div');
@@ -51,7 +66,7 @@ function createTableFromObjectArray(arr) {
         return createElementFromHTML(`<table></table>`);
     const headerCells = Object.keys(arr[0]).map((k) => `<th>${k}</th>`);
     const rows = arr.map((e) => {
-        const cells = Object.values(e).map((v) => `<td>${v}</td>`);
+        const cells = Object.keys(e).map((k) => `<td>${e[k]}</td>`);
         return `<tr>${cells}</tr>`;
     });
     return createElementFromHTML(/*html*/ `
@@ -61,34 +76,41 @@ function createTableFromObjectArray(arr) {
         </table>
     `);
 }
-async function fetchDeparturesByGroup(stops) {
-    const departures = [];
-    for (const stop of stops) {
-        departures.push(...(await fetchDepartures(stop)));
-    }
-    departures.sort((a, b) => a.minutesMinusWalkingTime - b.minutesMinusWalkingTime);
-    return departures;
+function fetchDeparturesByGroup(stops) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const departures = [];
+        for (const stop of stops) {
+            departures.push(...(yield fetchDepartures(stop)));
+        }
+        departures.sort((a, b) => a.minutesMinusWalkingTime - b.minutesMinusWalkingTime);
+        return departures;
+    });
 }
-async function fetchDepartures(stop) {
-    const response = await fetch('https://svc.metrotransit.org/nextrip/' + stop.id);
-    if (!response.ok)
-        throw new Error(`bad response from api ${response.status} ${response.statusText}}`);
-    const data = await response.json();
-    return data.departures
-        .filter((d) => stop.routes.includes(d.route_id))
-        .map(d => {
-        const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
-        return {
-            route: `${d.route_short_name}${d.terminal ?? ''}`,
-            minutesUntilDepart: Math.round(minutesUntilDepart),
-            minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
-        };
-    })
-        .filter((d) => d.minutesMinusWalkingTime > 0);
+function fetchDepartures(stop) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield fetch('https://svc.metrotransit.org/nextrip/' + stop.id);
+        if (!response.ok)
+            throw new Error(`bad response from api ${response.status} ${response.statusText}}`);
+        const data = yield response.json();
+        return data.departures
+            .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
+            .map(d => {
+            var _a;
+            const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
+            return {
+                route: `${d.route_short_name}${(_a = d.terminal) !== null && _a !== void 0 ? _a : ''}`,
+                minutesUntilDepart: Math.round(minutesUntilDepart),
+                minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
+            };
+        })
+            .filter((d) => d.minutesMinusWalkingTime > 0);
+    });
 }
-async function loadConfig(fragment) {
-    const res = await fetch(`${fragment}.json`);
-    const config = await res.json();
-    return config;
+function loadConfig(fragment) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = yield fetch(`${fragment}.json`);
+        const config = yield res.json();
+        return config;
+    });
 }
 main();

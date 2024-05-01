@@ -7,37 +7,35 @@
     "stopGroups": {
         "Downtown": [
             {
-                "id": "1920",
-                "walkingTime": 5,
+                "id": "15345",
+                "walkingTime": 3,
                 "routes": [
-                    "11",
-                    "17",
-                    "18"
+                    "9"
                 ]
             },
             {
-                "id": "17988",
-                "walkingTime": 7,
+                "id": "56929",
+                "walkingTime": 10,
                 "routes": [
-                    "10"
+                    "924",
+                    "5"
                 ]
             }
         ],
-        "Uptown": [
+        "Phillips": [
             {
-                "id": "1197",
-                "walkingTime": 5,
+                "id": "15346",
+                "walkingTime": 2,
                 "routes": [
-                    "11",
-                    "17",
-                    "18"
+                    "9"
                 ]
             },
             {
-                "id": "53301",
+                "id": "56909",
                 "walkingTime": 10,
                 "routes": [
-                    "904"
+                    "924",
+                    "5"
                 ]
             }
         ]
