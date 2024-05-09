@@ -47,7 +47,7 @@ h2 {
 }
 
 td {
-    border: 1px solid black;
+    border: 1px solid lightgray;
     padding: 5px;
     text-align: center;
 }
@@ -61,7 +61,7 @@ tr:nth-child(odd) {
 }
 
 th {
-    border: 1px solid black;
+    border: 1px solid lightgray;
     padding: 5px;
 }
 
@@ -74,5 +74,16 @@ th {
 @media only screen and (max-width: 400px) {
     * {
         font-size: xx-small;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        color: white;
+        background-color: black;
+    }
+
+    tr:nth-child(odd) {
+        background-color: #444;
     }
 }
