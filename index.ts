@@ -11,24 +11,31 @@ async function main() {
 }
 
 async function updateDisplay(config: Config): Promise<void> {
-    const groupsDiv = document.getElementById('stop-groups') as HTMLDivElement;
-    groupsDiv.innerHTML = '';
+
+    let elements: string[] = [];
     for (const stopGroup of Object.keys(config.stopGroups)) {
         const stops = config.stopGroups[stopGroup];
         const departures = await fetchDeparturesByGroup(stops);
-        const table = createTableFromObjectArray(departures.slice(0, 6));
-        console.log(table);
-        groupsDiv.appendChild(createElementFromHTML(`<h1>${stopGroup}</h1>`)[0]);
-        groupsDiv.appendChild(table[1]);
+        const stopGroupHtml = createStopGroup(stopGroup, departures);
+        elements.push(stopGroupHtml);
     }
+    const groupsDiv = document.getElementById('stop-groups') as HTMLDivElement;
+    groupsDiv.innerHTML = elements.join('');
 
     const weatherDiv = document.getElementById('weather') as HTMLDivElement;
     const weather = await fetchWeather(config.weather);
     weatherDiv.innerHTML = `
-        <h2>${weather.description}</h2>
-        <h2>${weather.temperature}℉ </h2>
-        <h2>Wind: ${weather.windSpeed} ${weather.windDirection}<h2>
+        <h4>${config.name}</h4>
+        <h4>${weather.description}</h4>
+        <h4>${weather.temperature}℉ </h4>
+        <h4>Wind: ${weather.windSpeed} ${weather.windDirection}</h4>
     `;
+}
+
+function createStopGroup(title: string, departures: Departure[]): string {
+    const table = createTableFromDepartures(title, departures.slice(0, 20));
+    console.log(table);
+    return table;
 }
 
 async function fetchWeather(config: WeatherConfig): Promise<Weather> {
@@ -44,25 +51,38 @@ async function fetchWeather(config: WeatherConfig): Promise<Weather> {
     }
 }
 
-function createElementFromHTML(htmlString: string): NodeListOf<ChildNode> {
-    const div = document.createElement('div');
-    div.innerHTML = htmlString.trim();
-    return div.childNodes;
-}
-
-function createTableFromObjectArray(arr: Array<Record<string, unknown>>) {
-    if (arr.length < 1) return createElementFromHTML(`<table></table>`);
-    const headerCells = Object.keys(arr[0]).map((k) => `<th>${k}</th>`);
-    const rows = arr.map((e) => {
-        const cells = Object.keys(e).map((k) => `<td>${e[k]}</td>`);
-        return `<tr>${cells}</tr>`;
-    })
-    return createElementFromHTML(/*html*/`
+function createTableFromDepartures(title: string, departures: Departure[]): string {
+    if (departures.length < 1) return /*html*/`
         <table>
-            <tr>${headerCells}</tr>
+            <tr colspan="4">
+                <h1>${title}</h1>
+            </tr>
+        </table>
+    `;
+    const headerCells = Object.keys(departures[0]).map((k) => `<th>${k}</th>`);
+    const rows = departures.map((e) => (/*html*/`
+        <tr>
+            <td>${e.route}</td>
+            <td>${e.direction}</td>
+            <td><b>${e.minutesUntilDepart}</b> min</td>
+            <td><b>${e.minutesMinusWalkingTime}</b> min</td>
+        </tr>
+    `));
+    return /*html*/`
+        <table>
+            <tr>
+                <td colspan="${headerCells.length}"><h2>${title}</h2></td>
+            </tr>
+            <tr>
+                <th>Route</th>
+                <th>Direction</th>
+                <th>Departs</th>
+                <th>Leave</th>
+            </tr>
+
             ${rows}
         </table>
-    `);
+    `.replace(/,/g, '');
 }
 
 async function fetchDeparturesByGroup(stops: Stop[]): Promise<Departure[]> {
@@ -84,6 +104,7 @@ async function fetchDepartures(stop: Stop): Promise<Departure[]> {
             const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
             return {
                 route: `${d.route_short_name}${d.terminal ?? ''}`,
+                direction: d.direction_text,
                 minutesUntilDepart: Math.round(minutesUntilDepart),
                 minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
             }
@@ -100,6 +121,7 @@ type Weather = {
 
 type Departure = {
     route: string;
+    direction: string;
     minutesUntilDepart: number;
     minutesMinusWalkingTime: number;
 }

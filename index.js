@@ -22,24 +22,29 @@ function main() {
 }
 function updateDisplay(config) {
     return __awaiter(this, void 0, void 0, function* () {
-        const groupsDiv = document.getElementById('stop-groups');
-        groupsDiv.innerHTML = '';
+        let elements = [];
         for (const stopGroup of Object.keys(config.stopGroups)) {
             const stops = config.stopGroups[stopGroup];
             const departures = yield fetchDeparturesByGroup(stops);
-            const table = createTableFromObjectArray(departures.slice(0, 6));
-            console.log(table);
-            groupsDiv.appendChild(createElementFromHTML(`<h1>${stopGroup}</h1>`)[0]);
-            groupsDiv.appendChild(table[1]);
+            const stopGroupHtml = createStopGroup(stopGroup, departures);
+            elements.push(stopGroupHtml);
         }
+        const groupsDiv = document.getElementById('stop-groups');
+        groupsDiv.innerHTML = elements.join('');
         const weatherDiv = document.getElementById('weather');
         const weather = yield fetchWeather(config.weather);
         weatherDiv.innerHTML = `
-        <h2>${weather.description}</h2>
-        <h2>${weather.temperature}℉ </h2>
-        <h2>Wind: ${weather.windSpeed} ${weather.windDirection}<h2>
+        <h4>${config.name}</h4>
+        <h4>${weather.description}</h4>
+        <h4>${weather.temperature}℉ </h4>
+        <h4>Wind: ${weather.windSpeed} ${weather.windDirection}</h4>
     `;
     });
+}
+function createStopGroup(title, departures) {
+    const table = createTableFromDepartures(title, departures.slice(0, 20));
+    console.log(table);
+    return table;
 }
 function fetchWeather(config) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -56,25 +61,39 @@ function fetchWeather(config) {
         };
     });
 }
-function createElementFromHTML(htmlString) {
-    const div = document.createElement('div');
-    div.innerHTML = htmlString.trim();
-    return div.childNodes;
-}
-function createTableFromObjectArray(arr) {
-    if (arr.length < 1)
-        return createElementFromHTML(`<table></table>`);
-    const headerCells = Object.keys(arr[0]).map((k) => `<th>${k}</th>`);
-    const rows = arr.map((e) => {
-        const cells = Object.keys(e).map((k) => `<td>${e[k]}</td>`);
-        return `<tr>${cells}</tr>`;
-    });
-    return createElementFromHTML(/*html*/ `
+function createTableFromDepartures(title, departures) {
+    if (departures.length < 1)
+        return /*html*/ `
         <table>
-            <tr>${headerCells}</tr>
+            <tr colspan="4">
+                <h1>${title}</h1>
+            </tr>
+        </table>
+    `;
+    const headerCells = Object.keys(departures[0]).map((k) => `<th>${k}</th>`);
+    const rows = departures.map((e) => ( /*html*/`
+        <tr>
+            <td>${e.route}</td>
+            <td>${e.direction}</td>
+            <td><b>${e.minutesUntilDepart}</b> min</td>
+            <td><b>${e.minutesMinusWalkingTime}</b> min</td>
+        </tr>
+    `));
+    return /*html*/ `
+        <table>
+            <tr>
+                <td colspan="${headerCells.length}"><h2>${title}</h2></td>
+            </tr>
+            <tr>
+                <th>Route</th>
+                <th>Direction</th>
+                <th>Departs</th>
+                <th>Leave</th>
+            </tr>
+
             ${rows}
         </table>
-    `);
+    `.replace(/,/g, '');
 }
 function fetchDeparturesByGroup(stops) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -99,6 +118,7 @@ function fetchDepartures(stop) {
             const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
             return {
                 route: `${d.route_short_name}${(_a = d.terminal) !== null && _a !== void 0 ? _a : ''}`,
+                direction: d.direction_text,
                 minutesUntilDepart: Math.round(minutesUntilDepart),
                 minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
             };
