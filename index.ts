@@ -1,35 +1,64 @@
 
-async function main() {
+function main() {
     const fragment = location.hash.replace('#', '');
-    console.log(fragment);
-    const config = await loadConfig(fragment || 'lpm');
-    const nameH1 = document.getElementById('name') as HTMLHeadingElement;
-    nameH1.innerHTML = config.name;
-    updateDisplay(config);
-    const updateInterval = 15 * 1000; // 15 seconds
-    setInterval(() => updateDisplay(config), updateInterval);
+    loadConfig(fragment || 'lpm', (config: Config) => {
+        const nameH1 = document.getElementById('name') as HTMLHeadingElement;
+        nameH1.innerHTML = config.name;
+        updateDisplay(config);
+        const updateInterval = 15 * 1000; // 15 seconds
+        setInterval(() => updateDisplay(config), updateInterval);
+    });
 }
 
-async function updateDisplay(config: Config): Promise<void> {
-
-    let elements: string[] = [];
+function updateDisplay(config: Config): void {
+    let depaturesByGroup: Record<string, Departure[]> = {};
+    let groupIndex = 0;
     for (const stopGroup of Object.keys(config.stopGroups)) {
         const stops = config.stopGroups[stopGroup];
-        const departures = await fetchDeparturesByGroup(stops);
-        const stopGroupHtml = createStopGroup(stopGroup, departures);
-        elements.push(stopGroupHtml);
+        fetchDeparturesByGroup(stops, (departures: Departure[]) => {
+            depaturesByGroup[stopGroup] = departures;
+            groupIndex++;
+            if (groupIndex === Object.keys(config.stopGroups).length) {
+                updateDepartureTables(config, depaturesByGroup);
+            }
+        });
     }
+    const weatherDiv = document.getElementById('weather') as HTMLDivElement;
+    fetchWeather(config.weather, (weather: Weather) => {
+        weatherDiv.innerHTML = `
+            <h4>${config.name}</h4>
+            <h4>${weather.description}</h4>
+            <h4>${weather.temperature}℉ </h4>
+            <h4>Wind: ${weather.windSpeed} ${weather.windDirection}</h4>
+        `;
+    });
+}
+
+function updateDepartureTables(config: Config, departuresByGroup: Record<string, Departure[]>): void {
+    const groups = Object.keys(config.stopGroups);
+    const elements = groups.map((group) => createStopGroup(group, departuresByGroup[group]))
     const groupsDiv = document.getElementById('stop-groups') as HTMLDivElement;
     groupsDiv.innerHTML = elements.join('');
+}
 
-    const weatherDiv = document.getElementById('weather') as HTMLDivElement;
-    const weather = await fetchWeather(config.weather);
-    weatherDiv.innerHTML = `
-        <h4>${config.name}</h4>
-        <h4>${weather.description}</h4>
-        <h4>${weather.temperature}℉ </h4>
-        <h4>Wind: ${weather.windSpeed} ${weather.windDirection}</h4>
-    `;
+function sendRequest<T>(url: string, callback: (d: T) => void): void {
+    const xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', () => {
+        callback(JSON.parse(xhr.responseText));
+    });
+    xhr.addEventListener('error', () => {
+        addErrorDisplay(xhr);
+    });
+    xhr.open('GET', url);
+    xhr.setRequestHeader('Accept', '*/*')
+    xhr.send();
+}
+
+function addErrorDisplay(e: any): void {
+    const errorDiv = document.getElementById('errors') as HTMLDivElement;
+    const p = document.createElement('p');
+    p.innerHTML = JSON.stringify(e);
+    errorDiv.appendChild(p);
 }
 
 function createStopGroup(title: string, departures: Departure[]): string {
@@ -38,17 +67,16 @@ function createStopGroup(title: string, departures: Departure[]): string {
     return table;
 }
 
-async function fetchWeather(config: WeatherConfig): Promise<Weather> {
-    const response = await fetch(`https://api.weather.gov/gridpoints/${config.officeId}/${config.gridpoints}/forecast/hourly`);
-    if (!response.ok) throw new Error(`bad repsonse from weather api ${response.status} ${response.statusText}`);
-    const data: WeatherAPIResponse = await response.json();
-    const current = data.properties.periods[0];
-    return {
-        temperature: current.temperature,
-        windDirection: current.windDirection,
-        windSpeed: current.windSpeed,
-        description: current.shortForecast,
-    }
+function fetchWeather(config: WeatherConfig, callback: (w: Weather) => void): void {
+    sendRequest(`https://api.weather.gov/gridpoints/${config.officeId}/${config.gridpoints}/forecast/hourly`, (data: WeatherAPIResponse) => {
+        const current = data.properties.periods[0];
+        callback({
+            temperature: current.temperature,
+            windDirection: current.windDirection,
+            windSpeed: current.windSpeed,
+            description: current.shortForecast,
+        })
+    })
 }
 
 function createTableFromDepartures(title: string, departures: Departure[]): string {
@@ -85,31 +113,42 @@ function createTableFromDepartures(title: string, departures: Departure[]): stri
     `.replace(/,/g, '');
 }
 
-async function fetchDeparturesByGroup(stops: Stop[]): Promise<Departure[]> {
+function fetchDeparturesByGroup(stops: Stop[], callback: (d: Departure[]) => void): void {
     const departures: Departure[] = [];
+    let index = 0;
     for (const stop of stops) {
-        departures.push(...(await fetchDepartures(stop)));
+        fetchDepartures(stop, (stopDepartures: Departure[]) => {
+            departures.push(...stopDepartures);
+            index++;
+            if (index === stops.length) {
+                departures.sort((a, b) => a.minutesMinusWalkingTime - b.minutesMinusWalkingTime);
+                callback(departures);
+            }
+        });
     }
-    departures.sort((a, b) => a.minutesMinusWalkingTime - b.minutesMinusWalkingTime);
-    return departures;
 }
 
-async function fetchDepartures(stop: Stop): Promise<Departure[]> {
-    const response = await fetch('https://svc.metrotransit.org/nextrip/' + stop.id);
-    if (!response.ok) throw new Error(`bad response from api ${response.status} ${response.statusText}}`);
-    const data: NexTripAPIResponse = await response.json();
-    return data.departures
-        .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
-        .map(d => {
-            const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
-            return {
-                route: `${d.route_short_name}${d.terminal ?? ''}`,
-                direction: d.direction_text,
-                minutesUntilDepart: Math.round(minutesUntilDepart),
-                minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
-            }
-        })
-        .filter((d) => d.minutesMinusWalkingTime > 0);
+function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
+    sendRequest('https://kylejon.es/metro-transit-nextrip/' + stop.id, (data: NexTripAPIResponse) => {
+        callback(data.departures
+            .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
+            .map(d => {
+                const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
+                return {
+                    route: `${d.route_short_name}${d.terminal ?? ''}`,
+                    direction: d.direction_text,
+                    minutesUntilDepart: Math.round(minutesUntilDepart),
+                    minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
+                }
+            })
+            .filter((d) => d.minutesMinusWalkingTime > 0))
+    });
+}
+
+function loadConfig(fragment: string, callback: (c: Config) => void): void {
+    sendRequest(`${fragment}.json`, (res: Config) => {
+        callback(res)
+    });
 }
 
 type Weather = {
@@ -141,12 +180,6 @@ type Stop = {
 type WeatherConfig = {
     officeId: string;
     gridpoints: string;
-}
-
-async function loadConfig(fragment: string): Promise<Config> {
-    const res = await fetch(`${fragment}.json`);
-    const config = await res.json();
-    return config;
 }
 
 type NexTripAPIResponse = {
@@ -234,6 +267,9 @@ type Period = {
 }
 
 
-
-main();
+try {
+    main();
+} catch (err) {
+    alert(JSON.stringify(err));
+}
 
