@@ -14,24 +14,19 @@ table {
 
 #weather {
     width: 100%;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
+    background-color: lightgrey;
 }
 
 #weather * {
     font-size: 1.2em;
-    justify-content: center;
+    font-weight: bold;
 }
 
-#weather h4:first-child {
-    font-size: 1em;
+#weather td {
+    border: none;
 }
 
 #stop-groups {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 5px;
     width: 100%;
 }
 
@@ -41,9 +36,22 @@ table {
     text-align: center;
 }
 
+.stop-group {
+    font-size: 2.4em;
+}
+
+.min {
+    font-size: small;
+}
+
+.stop-group tr:nth-child(odd) {
+    background-color: lightgrey;
+}
+
 h2 {
     padding: 0px;
     margin: 0px;
+    font-size: 0.9em;
 }
 
 td {
@@ -56,13 +64,10 @@ td:nth-child(n+3) {
     text-align: right;
 }
 
-tr:nth-child(odd) {
-    background-color: lightgrey;
-}
-
 th {
     border: 1px solid lightgray;
     padding: 5px;
+    font-size: 0.75em;
 }
 
 @media only screen and (max-width: 600px) {
@@ -83,7 +88,19 @@ th {
         background-color: black;
     }
 
-    tr:nth-child(odd) {
-        background-color: #444;
+    td {
+        border: 1px solid #222;
+    }
+
+    th {
+        border: 1px solid #222;
+    }
+
+    .stop-group tr:nth-child(odd) {
+        background-color: #222;
+    }
+
+    #weather {
+        background-color: #222;
     }
 }

@@ -25,11 +25,15 @@ function updateDisplay(config: Config): void {
     }
     const weatherDiv = document.getElementById('weather') as HTMLDivElement;
     fetchWeather(config.weather, (weather: Weather) => {
-        weatherDiv.innerHTML = `
-            <h4>${config.name}</h4>
-            <h4>${weather.description}</h4>
-            <h4>${weather.temperature}℉ </h4>
-            <h4>Wind: ${weather.windSpeed} ${weather.windDirection}</h4>
+        weatherDiv.innerHTML = /*html*/`
+            <table>
+                <tr>
+                    <td>${config.name}</td>
+                    <td>${weather.description}</td>
+                    <td>${weather.temperature}°F</td>
+                    <td>Wind: ${weather.windSpeed} ${weather.windDirection}</td>
+                </tr>
+            </table>
         `;
     });
 }
@@ -38,7 +42,13 @@ function updateDepartureTables(config: Config, departuresByGroup: Record<string,
     const groups = Object.keys(config.stopGroups);
     const elements = groups.map((group) => createStopGroup(group, departuresByGroup[group]))
     const groupsDiv = document.getElementById('stop-groups') as HTMLDivElement;
-    groupsDiv.innerHTML = elements.join('');
+    groupsDiv.innerHTML = /*html*/`
+        <table>
+            <tr>
+                ${elements.map(e => `<td>${e}</td>`)}
+            <tr>
+        </table>
+    `.replace(/,/g, '');
 }
 
 function sendRequest<T>(url: string, callback: (d: T) => void): void {
@@ -81,9 +91,11 @@ function fetchWeather(config: WeatherConfig, callback: (w: Weather) => void): vo
 
 function createTableFromDepartures(title: string, departures: Departure[]): string {
     if (departures.length < 1) return /*html*/`
-        <table>
+        <table>  
             <tr colspan="4">
-                <h1>${title}</h1>
+                <th>
+                    <h2>${title}</h2>
+                </th>
             </tr>
         </table>
     `;
@@ -92,12 +104,12 @@ function createTableFromDepartures(title: string, departures: Departure[]): stri
         <tr>
             <td>${e.route}</td>
             <td>${e.direction}</td>
-            <td><b>${e.minutesUntilDepart}</b> min</td>
-            <td><b>${e.minutesMinusWalkingTime}</b> min</td>
+            <td><b>${e.minutesUntilDepart}</b> <span class="min">min</span></td>
+            <td><b>${e.minutesMinusWalkingTime}</b> <span class="min">min</span></td>
         </tr>
     `));
     return /*html*/`
-        <table>
+        <table class="stop-group">
             <tr>
                 <td colspan="${headerCells.length}"><h2>${title}</h2></td>
             </tr>

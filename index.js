@@ -27,14 +27,14 @@ function updateDisplay(config) {
     }
     var weatherDiv = document.getElementById('weather');
     fetchWeather(config.weather, function (weather) {
-        weatherDiv.innerHTML = "\n            <h4>".concat(config.name, "</h4>\n            <h4>").concat(weather.description, "</h4>\n            <h4>").concat(weather.temperature, "\u2109 </h4>\n            <h4>Wind: ").concat(weather.windSpeed, " ").concat(weather.windDirection, "</h4>\n        ");
+        weatherDiv.innerHTML = /*html*/ "\n            <table>\n                <tr>\n                    <td>".concat(config.name, "</td>\n                    <td>").concat(weather.description, "</td>\n                    <td>").concat(weather.temperature, "\u00B0F</td>\n                    <td>Wind: ").concat(weather.windSpeed, " ").concat(weather.windDirection, "</td>\n                </tr>\n            </table>\n        ");
     });
 }
 function updateDepartureTables(config, departuresByGroup) {
     var groups = Object.keys(config.stopGroups);
     var elements = groups.map(function (group) { return createStopGroup(group, departuresByGroup[group]); });
     var groupsDiv = document.getElementById('stop-groups');
-    groupsDiv.innerHTML = elements.join('');
+    groupsDiv.innerHTML = /*html*/ "\n        <table>\n            <tr>\n                ".concat(elements.map(function (e) { return "<td>".concat(e, "</td>"); }), "\n            <tr>\n        </table>\n    ").replace(/,/g, '');
 }
 function sendRequest(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -72,10 +72,10 @@ function fetchWeather(config, callback) {
 }
 function createTableFromDepartures(title, departures) {
     if (departures.length < 1)
-        return /*html*/ "\n        <table>\n            <tr colspan=\"4\">\n                <h1>".concat(title, "</h1>\n            </tr>\n        </table>\n    ");
+        return /*html*/ "\n        <table>  \n            <tr colspan=\"4\">\n                <th>\n                    <h2>".concat(title, "</h2>\n                </th>\n            </tr>\n        </table>\n    ");
     var headerCells = Object.keys(departures[0]).map(function (k) { return "<th>".concat(k, "</th>"); });
-    var rows = departures.map(function (e) { return ( /*html*/"\n        <tr>\n            <td>".concat(e.route, "</td>\n            <td>").concat(e.direction, "</td>\n            <td><b>").concat(e.minutesUntilDepart, "</b> min</td>\n            <td><b>").concat(e.minutesMinusWalkingTime, "</b> min</td>\n        </tr>\n    ")); });
-    return /*html*/ "\n        <table>\n            <tr>\n                <td colspan=\"".concat(headerCells.length, "\"><h2>").concat(title, "</h2></td>\n            </tr>\n            <tr>\n                <th>Route</th>\n                <th>Direction</th>\n                <th>Departs</th>\n                <th>Leave</th>\n            </tr>\n\n            ").concat(rows, "\n        </table>\n    ").replace(/,/g, '');
+    var rows = departures.map(function (e) { return ( /*html*/"\n        <tr>\n            <td>".concat(e.route, "</td>\n            <td>").concat(e.direction, "</td>\n            <td><b>").concat(e.minutesUntilDepart, "</b> <span class=\"min\">min</span></td>\n            <td><b>").concat(e.minutesMinusWalkingTime, "</b> <span class=\"min\">min</span></td>\n        </tr>\n    ")); });
+    return /*html*/ "\n        <table class=\"stop-group\">\n            <tr>\n                <td colspan=\"".concat(headerCells.length, "\"><h2>").concat(title, "</h2></td>\n            </tr>\n            <tr>\n                <th>Route</th>\n                <th>Direction</th>\n                <th>Departs</th>\n                <th>Leave</th>\n            </tr>\n\n            ").concat(rows, "\n        </table>\n    ").replace(/,/g, '');
 }
 function fetchDeparturesByGroup(stops, callback) {
     var departures = [];
