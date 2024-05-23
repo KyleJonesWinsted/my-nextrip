@@ -55,9 +55,25 @@ function addErrorDisplay(e) {
     errorDiv.appendChild(p);
 }
 function createStopGroup(title, departures) {
-    var table = createTableFromDepartures(title, departures.slice(0, 20));
+    var fixedLenDepartures = setLength(departures, 20, {
+        direction: '',
+        minutesMinusWalkingTime: 0,
+        minutesUntilDepart: 0,
+        route: '',
+    });
+    var table = createTableFromDepartures(title, fixedLenDepartures);
     console.log(table);
     return table;
+}
+function setLength(arr, length, defaultValue) {
+    if (arr.length >= length) {
+        return arr.slice(0, length);
+    }
+    var newArr = arr.slice();
+    while (newArr.length < length) {
+        newArr.push(defaultValue);
+    }
+    return newArr;
 }
 function fetchWeather(config, callback) {
     sendRequest("https://api.weather.gov/gridpoints/".concat(config.officeId, "/").concat(config.gridpoints, "/forecast/hourly"), function (data) {

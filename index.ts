@@ -72,9 +72,26 @@ function addErrorDisplay(e: any): void {
 }
 
 function createStopGroup(title: string, departures: Departure[]): string {
-    const table = createTableFromDepartures(title, departures.slice(0, 20));
+    const fixedLenDepartures = setLength(departures, 20, {
+        direction: '',
+        minutesMinusWalkingTime: 0,
+        minutesUntilDepart: 0,
+        route: '',
+    });
+    const table = createTableFromDepartures(title, fixedLenDepartures);
     console.log(table);
     return table;
+}
+
+function setLength<T>(arr: Array<T>, length: number, defaultValue: T): Array<T> {
+    if (arr.length >= length) {
+        return arr.slice(0, length);
+    }
+    const newArr = arr.slice();
+    while (newArr.length < length) {
+        newArr.push(defaultValue);
+    }
+    return newArr;
 }
 
 function fetchWeather(config: WeatherConfig, callback: (w: Weather) => void): void {
