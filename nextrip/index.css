@@ -70,6 +70,12 @@ th {
     font-size: 0.75em;
 }
 
+@media only screen and (max-width: 1000px) {
+    * {
+        font-size: small;
+    }
+}
+
 @media only screen and (max-width: 600px) {
     * {
         font-size: x-small;
