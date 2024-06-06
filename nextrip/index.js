@@ -1,13 +1,17 @@
 var departureFormat = 'relative';
+var interval = 0;
 function main() {
     var fragment = location.hash.replace('#', '');
     loadConfig(fragment || 'lpm', function (config) {
         updateDisplay(config);
         var updateInterval = 15 * 1000; // 15 seconds
-        setInterval(function () { return updateDisplay(config); }, updateInterval);
+        if (interval)
+            clearInterval(interval);
+        interval = setInterval(function () { return updateDisplay(config); }, updateInterval);
     });
 }
 function updateDisplay(config) {
+    console.log('updating', new Date());
     var depaturesByGroup = {};
     var groupIndex = 0;
     var _loop_1 = function (stopGroup) {

@@ -1,16 +1,19 @@
 
 let departureFormat: 'relative' | 'actual' = 'relative';
+let interval = 0;
 
 function main() {
     const fragment = location.hash.replace('#', '');
     loadConfig(fragment || 'lpm', (config: Config) => {
         updateDisplay(config);
         const updateInterval = 15 * 1000; // 15 seconds
-        setInterval(() => updateDisplay(config), updateInterval);
+        if (interval) clearInterval(interval);
+        interval = setInterval(() => updateDisplay(config), updateInterval);
     });
 }
 
 function updateDisplay(config: Config): void {
+    console.log('updating', new Date());
     let depaturesByGroup: Record<string, Departure[]> = {};
     let groupIndex = 0;
     for (const stopGroup of Object.keys(config.stopGroups)) {
