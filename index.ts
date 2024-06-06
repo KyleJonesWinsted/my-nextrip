@@ -1,9 +1,9 @@
 
+let departureFormat: 'relative' | 'actual' = 'relative';
+
 function main() {
     const fragment = location.hash.replace('#', '');
     loadConfig(fragment || 'lpm', (config: Config) => {
-        const nameH1 = document.getElementById('name') as HTMLHeadingElement;
-        nameH1.innerHTML = config.name;
         updateDisplay(config);
         const updateInterval = 15 * 1000; // 15 seconds
         setInterval(() => updateDisplay(config), updateInterval);
@@ -77,9 +77,9 @@ function createStopGroup(title: string, departures: Departure[]): string {
         minutesMinusWalkingTime: 0,
         minutesUntilDepart: 0,
         route: '',
+        departureTime: '',
     });
     const table = createTableFromDepartures(title, fixedLenDepartures);
-    console.log(table);
     return table;
 }
 
@@ -106,6 +106,16 @@ function fetchWeather(config: WeatherConfig, callback: (w: Weather) => void): vo
     })
 }
 
+function toggleDepartFormat(): void {
+    console.log('toggle');
+    if (departureFormat === 'relative') {
+        departureFormat = 'actual'
+    } else {
+        departureFormat = 'relative';
+    }
+    main();
+}
+
 function createTableFromDepartures(title: string, departures: Departure[]): string {
     if (departures.length < 1) return /*html*/`
         <table>  
@@ -121,7 +131,7 @@ function createTableFromDepartures(title: string, departures: Departure[]): stri
         <tr>
             <td>${e.route}</td>
             <td>${e.direction}</td>
-            <td><b>${e.minutesUntilDepart}</b> <span class="min">min</span></td>
+            <td onclick="toggleDepartFormat()">${departureFormat === 'actual' ? e.departureTime : '<b>' + e.minutesUntilDepart + '</b> <span class="min">min</span>'}</td>
             <td><b>${e.minutesMinusWalkingTime}</b> <span class="min">min</span></td>
         </tr>
     `));
@@ -167,11 +177,23 @@ function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
                     route: `${d.route_short_name}${d.terminal ?? ''}`,
                     direction: d.direction_text,
                     minutesUntilDepart: Math.round(minutesUntilDepart),
+                    departureTime: timeShortFormat(new Date(d.departure_time * 1000)),
                     minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
                 }
             })
             .filter((d) => d.minutesMinusWalkingTime > 0))
     });
+}
+
+function timeShortFormat(d: Date): string {
+    let hours = d.getHours();
+    const minutes = d.getMinutes();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const minutesText = minutes < 10 ? '0' + minutes : minutes;
+    const strTime = hours + ':' + minutesText + ' ' + ampm;
+    return strTime;
 }
 
 function loadConfig(fragment: string, callback: (c: Config) => void): void {
@@ -191,6 +213,7 @@ type Departure = {
     route: string;
     direction: string;
     minutesUntilDepart: number;
+    departureTime: string;
     minutesMinusWalkingTime: number;
 }
 

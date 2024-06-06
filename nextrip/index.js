@@ -1,8 +1,7 @@
+var departureFormat = 'relative';
 function main() {
     var fragment = location.hash.replace('#', '');
     loadConfig(fragment || 'lpm', function (config) {
-        var nameH1 = document.getElementById('name');
-        nameH1.innerHTML = config.name;
         updateDisplay(config);
         var updateInterval = 15 * 1000; // 15 seconds
         setInterval(function () { return updateDisplay(config); }, updateInterval);
@@ -60,9 +59,9 @@ function createStopGroup(title, departures) {
         minutesMinusWalkingTime: 0,
         minutesUntilDepart: 0,
         route: '',
+        departureTime: '',
     });
     var table = createTableFromDepartures(title, fixedLenDepartures);
-    console.log(table);
     return table;
 }
 function setLength(arr, length, defaultValue) {
@@ -86,11 +85,21 @@ function fetchWeather(config, callback) {
         });
     });
 }
+function toggleDepartFormat() {
+    console.log('toggle');
+    if (departureFormat === 'relative') {
+        departureFormat = 'actual';
+    }
+    else {
+        departureFormat = 'relative';
+    }
+    main();
+}
 function createTableFromDepartures(title, departures) {
     if (departures.length < 1)
         return /*html*/ "\n        <table>  \n            <tr colspan=\"4\">\n                <th>\n                    <h2>".concat(title, "</h2>\n                </th>\n            </tr>\n        </table>\n    ");
     var headerCells = Object.keys(departures[0]).map(function (k) { return "<th>".concat(k, "</th>"); });
-    var rows = departures.map(function (e) { return ( /*html*/"\n        <tr>\n            <td>".concat(e.route, "</td>\n            <td>").concat(e.direction, "</td>\n            <td><b>").concat(e.minutesUntilDepart, "</b> <span class=\"min\">min</span></td>\n            <td><b>").concat(e.minutesMinusWalkingTime, "</b> <span class=\"min\">min</span></td>\n        </tr>\n    ")); });
+    var rows = departures.map(function (e) { return ( /*html*/"\n        <tr>\n            <td>".concat(e.route, "</td>\n            <td>").concat(e.direction, "</td>\n            <td onclick=\"toggleDepartFormat()\">").concat(departureFormat === 'actual' ? e.departureTime : '<b>' + e.minutesUntilDepart + '</b> <span class="min">min</span>', "</td>\n            <td><b>").concat(e.minutesMinusWalkingTime, "</b> <span class=\"min\">min</span></td>\n        </tr>\n    ")); });
     return /*html*/ "\n        <table class=\"stop-group\">\n            <tr>\n                <td colspan=\"".concat(headerCells.length, "\"><h2>").concat(title, "</h2></td>\n            </tr>\n            <tr>\n                <th>Route</th>\n                <th>Direction</th>\n                <th>Departs</th>\n                <th>Leave</th>\n            </tr>\n\n            ").concat(rows, "\n        </table>\n    ").replace(/,/g, '');
 }
 function fetchDeparturesByGroup(stops, callback) {
@@ -119,11 +128,22 @@ function fetchDepartures(stop, callback) {
                 route: "".concat(d.route_short_name).concat((_a = d.terminal) !== null && _a !== void 0 ? _a : ''),
                 direction: d.direction_text,
                 minutesUntilDepart: Math.round(minutesUntilDepart),
+                departureTime: timeShortFormat(new Date(d.departure_time * 1000)),
                 minutesMinusWalkingTime: Math.round(minutesUntilDepart - stop.walkingTime),
             };
         })
             .filter(function (d) { return d.minutesMinusWalkingTime > 0; }));
     });
+}
+function timeShortFormat(d) {
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+    var ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    var minutesText = minutes < 10 ? '0' + minutes : minutes;
+    var strTime = hours + ':' + minutesText + ' ' + ampm;
+    return strTime;
 }
 function loadConfig(fragment, callback) {
     sendRequest("".concat(fragment, ".json"), function (res) {
