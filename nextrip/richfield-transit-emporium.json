@@ -1,0 +1,41 @@
+{
+    "name": "Richfield Transit Emporium",
+    "weather": {
+        "officeId": "MPX",
+        "gridpoints": "107,68"
+    },
+    "stopGroups": {
+        "Orange Line": [
+            {
+                "id": "48084",
+                "walkingTime": 8,
+                "routes": [
+                    "904"
+                ]
+            },
+            {
+                "id": "53297",
+                "walkingTime": 3,
+                "routes": [
+                    "904"
+                ]
+            }
+        ],
+        "515": [
+            {
+                "id": "2179",
+                "walkingTime": 5,
+                "routes": [
+                    "515"
+                ]
+            },
+            {
+                "id": "56875",
+                "walkingTime": 3,
+                "routes": [
+                    "515"
+                ]
+            }
+        ]
+    }
+}
