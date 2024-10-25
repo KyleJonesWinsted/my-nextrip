@@ -142,11 +142,10 @@ function fetchDepartures(stop, callback) {
 function timeShortFormat(d) {
     var hours = d.getHours();
     var minutes = d.getMinutes();
-    var ampm = hours >= 12 ? 'pm' : 'am';
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     var minutesText = minutes < 10 ? '0' + minutes : minutes;
-    var strTime = hours + ':' + minutesText + ' ' + ampm;
+    var strTime = hours + ':' + minutesText;
     return strTime;
 }
 function loadConfig(fragment, callback) {

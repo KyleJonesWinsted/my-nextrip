@@ -191,11 +191,10 @@ function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
 function timeShortFormat(d: Date): string {
     let hours = d.getHours();
     const minutes = d.getMinutes();
-    const ampm = hours >= 12 ? 'pm' : 'am';
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     const minutesText = minutes < 10 ? '0' + minutes : minutes;
-    const strTime = hours + ':' + minutesText + ' ' + ampm;
+    const strTime = hours + ':' + minutesText;
     return strTime;
 }
 
