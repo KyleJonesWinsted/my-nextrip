@@ -14,15 +14,15 @@ function main() {
 
 function updateDisplay(config: Config): void {
     console.log('updating', new Date());
-    let depaturesByGroup: Record<string, Departure[]> = {};
+    let departuresByGroup: Record<string, Departure[]> = {};
     let groupIndex = 0;
     for (const stopGroup of Object.keys(config.stopGroups)) {
         const stops = config.stopGroups[stopGroup];
         fetchDeparturesByGroup(stops, (departures: Departure[]) => {
-            depaturesByGroup[stopGroup] = departures;
+            departuresByGroup[stopGroup] = departures;
             groupIndex++;
             if (groupIndex === Object.keys(config.stopGroups).length) {
-                updateDepartureTables(config, depaturesByGroup);
+                updateDepartureTables(config, departuresByGroup);
             }
         });
     }

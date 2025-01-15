@@ -12,15 +12,15 @@ function main() {
 }
 function updateDisplay(config) {
     console.log('updating', new Date());
-    var depaturesByGroup = {};
+    var departuresByGroup = {};
     var groupIndex = 0;
     var _loop_1 = function (stopGroup) {
         var stops = config.stopGroups[stopGroup];
         fetchDeparturesByGroup(stops, function (departures) {
-            depaturesByGroup[stopGroup] = departures;
+            departuresByGroup[stopGroup] = departures;
             groupIndex++;
             if (groupIndex === Object.keys(config.stopGroups).length) {
-                updateDepartureTables(config, depaturesByGroup);
+                updateDepartureTables(config, departuresByGroup);
             }
         });
     };
