@@ -171,7 +171,7 @@ function fetchDeparturesByGroup(stops: Stop[], callback: (d: Departure[]) => voi
 }
 
 function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
-    sendRequest('https://kylejon.es/metro-transit-nextrip/' + stop.id, (data: NexTripAPIResponse) => {
+    sendRequest('https://svc.metrotransit.org/nextrip/' + stop.id, (data: NexTripAPIResponse) => {
         callback(data.departures
             .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
             .map(d => {

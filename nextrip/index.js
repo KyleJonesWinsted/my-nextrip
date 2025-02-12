@@ -122,7 +122,7 @@ function fetchDeparturesByGroup(stops, callback) {
     }
 }
 function fetchDepartures(stop, callback) {
-    sendRequest('https://kylejon.es/metro-transit-nextrip/' + stop.id, function (data) {
+    sendRequest('https://svc.metrotransit.org/nextrip/' + stop.id, function (data) {
         callback(data.departures
             .filter(function (d) { return stop.routes.indexOf(d.route_id) >= 0; })
             .map(function (d) {
