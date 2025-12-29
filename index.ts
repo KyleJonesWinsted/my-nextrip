@@ -174,6 +174,7 @@ function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
     sendRequest('https://svc.metrotransit.org/nextrip/' + stop.id, (data: NexTripAPIResponse) => {
         callback(data.departures
             .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
+			.filter((d) => d.schedule_relationship !== 'Skipped')
             .map(d => {
                 const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
                 return {
