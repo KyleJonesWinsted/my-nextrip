@@ -125,6 +125,7 @@ function fetchDepartures(stop, callback) {
     sendRequest('https://svc.metrotransit.org/nextrip/' + stop.id, function (data) {
         callback(data.departures
             .filter(function (d) { return stop.routes.indexOf(d.route_id) >= 0; })
+            .filter(function (d) { return d.schedule_relationship !== 'Skipped'; })
             .map(function (d) {
             var _a;
             var minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
