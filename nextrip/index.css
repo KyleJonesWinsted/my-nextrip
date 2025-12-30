@@ -12,6 +12,12 @@ table {
     padding: 0px;
 }
 
+#error-banner {
+    width: 100%;
+    text-align: center;
+    background-color: lightcoral;
+}
+
 #weather {
     width: 100%;
     background-color: lightgrey;

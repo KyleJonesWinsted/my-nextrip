@@ -12,9 +12,15 @@ function main() {
     });
 }
 
+function showErrorBanner(show: boolean): void {
+    const errorBanner = document.getElementById('error-banner') as HTMLDivElement;
+    errorBanner.hidden = !show;
+}
+
 function updateDisplay(config: Config): void {
     console.log('updating', new Date());
     let departuresByGroup: Record<string, Departure[]> = {};
+    showErrorBanner(false);
     let groupIndex = 0;
     for (const stopGroup of Object.keys(config.stopGroups)) {
         const stops = config.stopGroups[stopGroup];
@@ -54,10 +60,14 @@ function updateDepartureTables(config: Config, departuresByGroup: Record<string,
     `.replace(/,/g, '');
 }
 
-function sendRequest<T>(url: string, callback: (d: T) => void): void {
+function sendRequest<T>(url: string, callback: (d: T) => void, error: () => void): void {
     const xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
-        callback(JSON.parse(xhr.responseText));
+        try {
+            callback(JSON.parse(xhr.responseText));
+        } catch {
+            error();
+        }
     });
     xhr.addEventListener('error', () => {
         addErrorDisplay(xhr);
@@ -106,7 +116,7 @@ function fetchWeather(config: WeatherConfig, callback: (w: Weather) => void): vo
             windSpeed: current.windSpeed,
             description: current.shortForecast,
         })
-    })
+    }, () => showErrorBanner(true));
 }
 
 function toggleDepartFormat(): void {
@@ -174,7 +184,7 @@ function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
     sendRequest('https://svc.metrotransit.org/nextrip/' + stop.id, (data: NexTripAPIResponse) => {
         callback(data.departures
             .filter((d) => stop.routes.indexOf(d.route_id) >= 0)
-			.filter((d) => d.schedule_relationship !== 'Skipped')
+            .filter((d) => d.schedule_relationship !== 'Skipped')
             .map(d => {
                 const minutesUntilDepart = (d.departure_time * 1000 - new Date().getTime()) / 1000 / 60;
                 return {
@@ -186,7 +196,7 @@ function fetchDepartures(stop: Stop, callback: (d: Departure[]) => void): void {
                 }
             })
             .filter((d) => d.minutesMinusWalkingTime > 0))
-    });
+    }, () => showErrorBanner(true));
 }
 
 function timeShortFormat(d: Date): string {
@@ -202,7 +212,7 @@ function timeShortFormat(d: Date): string {
 function loadConfig(fragment: string, callback: (c: Config) => void): void {
     sendRequest(`${fragment}.json`, (res: Config) => {
         callback(res)
-    });
+    }, () => showErrorBanner(true));
 }
 
 type Weather = {

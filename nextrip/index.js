@@ -10,9 +10,14 @@ function main() {
         interval = setInterval(function () { return updateDisplay(config); }, updateInterval);
     });
 }
+function showErrorBanner(show) {
+    var errorBanner = document.getElementById('error-banner');
+    errorBanner.hidden = !show;
+}
 function updateDisplay(config) {
     console.log('updating', new Date());
     var departuresByGroup = {};
+    showErrorBanner(false);
     var groupIndex = 0;
     var _loop_1 = function (stopGroup) {
         var stops = config.stopGroups[stopGroup];
@@ -39,10 +44,15 @@ function updateDepartureTables(config, departuresByGroup) {
     var groupsDiv = document.getElementById('stop-groups');
     groupsDiv.innerHTML = /*html*/ "\n        <table>\n            <tr>\n                ".concat(elements.map(function (e) { return "<td>".concat(e, "</td>"); }), "\n            <tr>\n        </table>\n    ").replace(/,/g, '');
 }
-function sendRequest(url, callback) {
+function sendRequest(url, callback, error) {
     var xhr = new XMLHttpRequest();
     xhr.addEventListener('load', function () {
-        callback(JSON.parse(xhr.responseText));
+        try {
+            callback(JSON.parse(xhr.responseText));
+        }
+        catch (_a) {
+            error();
+        }
     });
     xhr.addEventListener('error', function () {
         addErrorDisplay(xhr);
@@ -87,7 +97,7 @@ function fetchWeather(config, callback) {
             windSpeed: current.windSpeed,
             description: current.shortForecast,
         });
-    });
+    }, function () { return showErrorBanner(true); });
 }
 function toggleDepartFormat() {
     console.log('toggle');
@@ -138,7 +148,7 @@ function fetchDepartures(stop, callback) {
             };
         })
             .filter(function (d) { return d.minutesMinusWalkingTime > 0; }));
-    });
+    }, function () { return showErrorBanner(true); });
 }
 function timeShortFormat(d) {
     var hours = d.getHours();
@@ -152,7 +162,7 @@ function timeShortFormat(d) {
 function loadConfig(fragment, callback) {
     sendRequest("".concat(fragment, ".json"), function (res) {
         callback(res);
-    });
+    }, function () { return showErrorBanner(true); });
 }
 try {
     main();
