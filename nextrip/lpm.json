@@ -8,7 +8,7 @@
         "Downtown": [
             {
                 "id": "1920",
-                "walkingTime": 3,
+                "walkingTime": 5,
                 "routes": [
                     "11",
                     "17",
@@ -17,7 +17,7 @@
             },
             {
                 "id": "17988",
-                "walkingTime": 5,
+                "walkingTime": 7,
                 "routes": [
                     "10",
 					"25"
@@ -27,7 +27,6 @@
                 "id": "17941",
                 "walkingTime": 10,
                 "routes": [
-                    "6",
                     "4",
 					"925"
                 ]
@@ -36,7 +35,7 @@
         "Uptown": [
             {
                 "id": "1197",
-                "walkingTime": 3,
+                "walkingTime": 5,
                 "routes": [
                     "11",
                     "17",
